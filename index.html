@@ -5,37 +5,85 @@
   <title>Select injured body part</title>
   <style>
     body { font-family: Arial, sans-serif; padding: 24px; }
-    input { width: 100%; padding: 10px; font-size: 16px; margin: 12px 0 18px; }
-    button { display:block; width: 100%; text-align:left; margin: 6px 0; padding: 10px 14px; font-size: 15px; }
     .small { color:#555; font-size: 13px; margin-top: 6px; }
+
+    /* Map layout */
+    .map-wrap { position: relative; max-width: 900px; margin: 18px auto 0; }
+    .map-img  { width: 100%; height: auto; display: block; }
+
+    /* Invisible clickable regions (set alpha to 0.15 temporarily to adjust) */
+    .hotspot {
+      position: absolute;
+      background: rgba(255, 0, 0, 0.0);
+      border: 0;
+      padding: 0;
+      cursor: pointer;
+    }
+    .hotspot:focus { outline: 2px solid #000; }
   </style>
 </head>
 <body>
   <h2>Select injured body part</h2>
-  <div class="small">Click an option to return to the Zoho form with Body Part prefilled.</div>
+  <div class="small">Click a body region to return to the Zoho form with Body Part prefilled.</div>
 
-  <input id="search" placeholder="Search (e.g., Knee, Wrist, Head)..." />
+  <!-- Make sure this SVG file is in the SAME folder as this index.html in GitHub -->
+  <div class="map-wrap">
+    <img class="map-img" src="Morris-Human-Anatomy-Diagram-1933.svg" alt="Body Map" />
 
-  <div id="list"></div>
+    <!-- PROTOTYPE HOTSPOTS (adjust positions as needed)
+         Tip: temporarily change hotspot background alpha to 0.15 in CSS to see boxes. -->
+
+    <!-- Head / Neck -->
+    <button class="hotspot" style="left:45%; top:6%;  width:10%; height:10%;"
+            onclick="go('Head - Multiple Head Injury')" aria-label="Head"></button>
+
+    <button class="hotspot" style="left:40%; top:18%; width:20%; height:9%;"
+            onclick="go('Neck - Soft Tissue')" aria-label="Neck"></button>
+
+    <!-- Trunk -->
+    <button class="hotspot" style="left:35%; top:28%; width:30%; height:14%;"
+            onclick="go('Trunk - Chest')" aria-label="Chest"></button>
+
+    <button class="hotspot" style="left:35%; top:42%; width:30%; height:18%;"
+            onclick="go('Trunk - Abdomen Including Groin')" aria-label="Abdomen/Groin"></button>
+
+    <button class="hotspot" style="left:35%; top:60%; width:30%; height:10%;"
+            onclick="go('Trunk - Lower Back Area')" aria-label="Lower Back"></button>
+
+    <!-- Arms -->
+    <button class="hotspot" style="left:18%; top:28%; width:16%; height:22%;"
+            onclick="go('Upper Extremities - Upper Arm')" aria-label="Left Arm"></button>
+
+    <button class="hotspot" style="left:66%; top:28%; width:16%; height:22%;"
+            onclick="go('Upper Extremities - Upper Arm')" aria-label="Right Arm"></button>
+
+    <button class="hotspot" style="left:18%; top:50%; width:16%; height:14%;"
+            onclick="go('Upper Extremities - Hand')" aria-label="Left Hand"></button>
+
+    <button class="hotspot" style="left:66%; top:50%; width:16%; height:14%;"
+            onclick="go('Upper Extremities - Hand')" aria-label="Right Hand"></button>
+
+    <!-- Legs / Knees / Feet -->
+    <button class="hotspot" style="left:38%; top:70%; width:11%; height:16%;"
+            onclick="go('Lower Extremities - Upper Leg')" aria-label="Left Upper Leg"></button>
+
+    <button class="hotspot" style="left:51%; top:70%; width:11%; height:16%;"
+            onclick="go('Lower Extremities - Upper Leg')" aria-label="Right Upper Leg"></button>
+
+    <button class="hotspot" style="left:38%; top:84%; width:11%; height:7%;"
+            onclick="go('Lower Extremities - Knee')" aria-label="Left Knee"></button>
+
+    <button class="hotspot" style="left:51%; top:84%; width:11%; height:7%;"
+            onclick="go('Lower Extremities - Knee')" aria-label="Right Knee"></button>
+
+    <button class="hotspot" style="left:38%; top:91%; width:11%; height:7%;"
+            onclick="go('Lower Extremities - Foot')" aria-label="Left Foot"></button>
+
+    <button class="hotspot" style="left:51%; top:91%; width:11%; height:7%;"
+            onclick="go('Lower Extremities - Foot')" aria-label="Right Foot"></button>
+  </div>
 
   <script>
-    const OPTIONS = [
-      "Head - Brain","Head - Ear(s)","Head - Eye(s)","Head - Facial Bones","Head - Forehead",
-      "Head - Mouth","Head - Multiple Head Injury","Head - Nose","Head - Skull","Head - Soft Tissue",
-      "Head - Teeth","Lower Extremities - Ankle","Lower Extremities - Foot","Lower Extremities - Great Toe",
-      "Lower Extremities - Hip","Lower Extremities - Knee","Lower Extremities - Lower Leg","Lower Extremities - Multiple",
-      "Lower Extremities - Toe(s)","Lower Extremities - Upper Leg","Multi Body Parts - Artificial Appliance",
-      "Multi Body Parts - Incl Body Sys & Parts","Multi Body Parts - Multi Systems","Multi Body Parts - No Physical Injury",
-      "Multi Body Parts - Unable to Identify","Neck - Disc","Neck - Larynx","Neck - Multiple Neck Injury",
-      "Neck - Soft Tissue","Neck - Spinal Cord","Neck - Trachea","Neck - Vertebrae","SBA UNKNOWN",
-      "Trunk - Abdomen Including Groin","Trunk - Buttocks","Trunk - Chest","Trunk - Disc","Trunk - Heart",
-      "Trunk - Internal Organs","Trunk - Lower Back Area","Trunk - Lungs","Trunk - Mid Back Area","Trunk - Multiple",
-      "Trunk - Pelvis","Trunk - Ribs","Trunk - Sacrum and Coccyx","Trunk - Spinal Cord","Trunk - Upper Back Area",
-      "Trunk -Lumbar & or Sacral Vertebrae  NOC","Upper Extremities - Elbow","Upper Extremities - Finger(s)",
-      "Upper Extremities - Hand","Upper Extremities - Lower Arm","Upper Extremities - Multiple","Upper Extremities - Shoulder(s)",
-      "Upper Extremities - Thumb","Upper Extremities - Upper Arm","Upper Extremities - Wrist(s) & Hand(s)","Upper Extremities - Wrist"
-    ];
-
     function go(selected) {
       const params = new URLSearchParams(window.location.search);
       const returnUrl = params.get("returnUrl");
@@ -46,26 +94,6 @@
       const sep = returnUrl.includes("?") ? "&" : "?";
       window.location.href = returnUrl + sep + "body_part=" + encodeURIComponent(selected);
     }
-
-    const list = document.getElementById("list");
-    const search = document.getElementById("search");
-
-    function render(filterText="") {
-      list.innerHTML = "";
-      const ft = filterText.trim().toLowerCase();
-      OPTIONS
-        .filter(opt => opt.toLowerCase().includes(ft))
-        .forEach(opt => {
-          const btn = document.createElement("button");
-          btn.type = "button";
-          btn.textContent = opt;
-          btn.onclick = () => go(opt);
-          list.appendChild(btn);
-        });
-    }
-
-    search.addEventListener("input", () => render(search.value));
-    render();
   </script>
 </body>
 </html>
