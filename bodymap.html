@@ -1,0 +1,71 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Select injured body part</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 24px; }
+    input { width: 100%; padding: 10px; font-size: 16px; margin: 12px 0 18px; }
+    button { display:block; width: 100%; text-align:left; margin: 6px 0; padding: 10px 14px; font-size: 15px; }
+    .small { color:#555; font-size: 13px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <h2>Select injured body part</h2>
+  <div class="small">Click an option to return to the Zoho form with Body Part prefilled.</div>
+
+  <input id="search" placeholder="Search (e.g., Knee, Wrist, Head)..." />
+
+  <div id="list"></div>
+
+  <script>
+    const OPTIONS = [
+      "Head - Brain","Head - Ear(s)","Head - Eye(s)","Head - Facial Bones","Head - Forehead",
+      "Head - Mouth","Head - Multiple Head Injury","Head - Nose","Head - Skull","Head - Soft Tissue",
+      "Head - Teeth","Lower Extremities - Ankle","Lower Extremities - Foot","Lower Extremities - Great Toe",
+      "Lower Extremities - Hip","Lower Extremities - Knee","Lower Extremities - Lower Leg","Lower Extremities - Multiple",
+      "Lower Extremities - Toe(s)","Lower Extremities - Upper Leg","Multi Body Parts - Artificial Appliance",
+      "Multi Body Parts - Incl Body Sys & Parts","Multi Body Parts - Multi Systems","Multi Body Parts - No Physical Injury",
+      "Multi Body Parts - Unable to Identify","Neck - Disc","Neck - Larynx","Neck - Multiple Neck Injury",
+      "Neck - Soft Tissue","Neck - Spinal Cord","Neck - Trachea","Neck - Vertebrae","SBA UNKNOWN",
+      "Trunk - Abdomen Including Groin","Trunk - Buttocks","Trunk - Chest","Trunk - Disc","Trunk - Heart",
+      "Trunk - Internal Organs","Trunk - Lower Back Area","Trunk - Lungs","Trunk - Mid Back Area","Trunk - Multiple",
+      "Trunk - Pelvis","Trunk - Ribs","Trunk - Sacrum and Coccyx","Trunk - Spinal Cord","Trunk - Upper Back Area",
+      "Trunk -Lumbar & or Sacral Vertebrae  NOC","Upper Extremities - Elbow","Upper Extremities - Finger(s)",
+      "Upper Extremities - Hand","Upper Extremities - Lower Arm","Upper Extremities - Multiple","Upper Extremities - Shoulder(s)",
+      "Upper Extremities - Thumb","Upper Extremities - Upper Arm","Upper Extremities - Wrist(s) & Hand(s)","Upper Extremities - Wrist"
+    ];
+
+    function go(selected) {
+      const params = new URLSearchParams(window.location.search);
+      const returnUrl = params.get("returnUrl");
+      if (!returnUrl) {
+        alert("Missing returnUrl in the URL. Example: ?returnUrl=<your_zoho_form_url_encoded>");
+        return;
+      }
+      const sep = returnUrl.includes("?") ? "&" : "?";
+      window.location.href = returnUrl + sep + "body_part=" + encodeURIComponent(selected);
+    }
+
+    const list = document.getElementById("list");
+    const search = document.getElementById("search");
+
+    function render(filterText="") {
+      list.innerHTML = "";
+      const ft = filterText.trim().toLowerCase();
+      OPTIONS
+        .filter(opt => opt.toLowerCase().includes(ft))
+        .forEach(opt => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.textContent = opt;
+          btn.onclick = () => go(opt);
+          list.appendChild(btn);
+        });
+    }
+
+    search.addEventListener("input", () => render(search.value));
+    render();
+  </script>
+</body>
+</html>
