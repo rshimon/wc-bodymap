@@ -7,31 +7,66 @@
     body { font-family: Arial, sans-serif; padding: 24px; }
     .small { color:#555; font-size: 13px; margin-top: 6px; }
 
+    /* Toolbar */
+    .toolbar{
+      max-width: 900px;
+      margin: 12px auto 0;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .toolbar button{
+      padding: 8px 12px;
+      font-size: 14px;
+      width: auto;
+      text-align: center;
+      display: inline-block;
+    }
+
     /* Map layout */
     .map-wrap { position: relative; max-width: 900px; margin: 18px auto 0; }
     .map-img  { width: 100%; height: auto; display: block; }
 
-    /* Invisible clickable regions (set alpha to 0.15 temporarily to adjust) */
-    .hotspot {
-      position: absolute;
-      background: rgba(255, 0, 0, 0.0);
-      border: 0;
-      padding: 0;
+    /* Hotspots */
+    .hotspot{
+      position:absolute;
+      background: rgba(255, 0, 0, 0);   /* invisible by default */
+      border: 2px solid rgba(255, 0, 0, 0);
+      border-radius: 8px;
       cursor: pointer;
+      padding: 0;
     }
-    .hotspot:focus { outline: 2px solid #000; }
+
+    /* Visible on hover/focus */
+    .hotspot:hover,
+    .hotspot:focus {
+      background: rgba(255, 0, 0, 0.18);
+      border-color: rgba(255, 0, 0, 0.55);
+      outline: none;
+    }
+
+    /* Debug mode: show all hotspots */
+    .debug .hotspot {
+      background: rgba(255, 0, 0, 0.12);
+      border-color: rgba(255, 0, 0, 0.45);
+    }
   </style>
 </head>
 <body>
   <h2>Select injured body part</h2>
   <div class="small">Click a body region to return to the Zoho form with Body Part prefilled.</div>
 
+  <div class="toolbar">
+    <button type="button" id="toggleHotspots">Show hotspots</button>
+    <div class="small">Tip: turn on hotspots to align the click areas.</div>
+  </div>
+
   <!-- Make sure this SVG file is in the SAME folder as this index.html in GitHub -->
-  <div class="map-wrap">
+  <div class="map-wrap" id="mapWrap">
     <img class="map-img" src="Morris-Human-Anatomy-Diagram-1933.svg" alt="Body Map" />
 
     <!-- PROTOTYPE HOTSPOTS (adjust positions as needed)
-         Tip: temporarily change hotspot background alpha to 0.15 in CSS to see boxes. -->
+         Tip: click "Show hotspots" to see boxes, then adjust left/top/width/height percentages. -->
 
     <!-- Head / Neck -->
     <button class="hotspot" style="left:45%; top:6%;  width:10%; height:10%;"
@@ -94,6 +129,16 @@
       const sep = returnUrl.includes("?") ? "&" : "?";
       window.location.href = returnUrl + sep + "body_part=" + encodeURIComponent(selected);
     }
+
+    // Toggle debug visibility of hotspots
+    const mapWrap = document.getElementById("mapWrap");
+    const toggleBtn = document.getElementById("toggleHotspots");
+    toggleBtn.addEventListener("click", () => {
+      mapWrap.classList.toggle("debug");
+      toggleBtn.textContent = mapWrap.classList.contains("debug")
+        ? "Hide hotspots"
+        : "Show hotspots";
+    });
   </script>
 </body>
 </html>
