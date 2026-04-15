@@ -127,7 +127,7 @@
         return;
       }
       const sep = returnUrl.includes("?") ? "&" : "?";
-      window.location.href = returnUrl + sep + "body_part=" + encodeURIComponent(selected);
+      window.top.location.href = returnUrl + sep + "body_part=" + encodeURIComponent(selected);
     }
 
     // Toggle debug visibility of hotspots
