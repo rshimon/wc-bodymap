@@ -30,7 +30,8 @@
       flex-wrap: wrap;
     }
 
-    .toolbar button {
+    .toolbar button,
+    .map-actions button {
       padding: 10px 14px;
       font-size: 14px;
       cursor: pointer;
@@ -66,6 +67,13 @@
 
     .map-panel.open {
       display: block;
+    }
+
+    .map-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
     }
 
     .map-wrap {
@@ -111,6 +119,17 @@
       font-size: 14px;
     }
 
+    .status-box {
+      margin-top: 12px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 14px;
+      color: #333;
+      min-height: 20px;
+    }
+
     iframe {
       width: 100%;
       min-height: 1600px;
@@ -143,6 +162,10 @@
     <div class="map-panel" id="mapPanel">
       <h2>Body Map</h2>
       <p>Select one or more areas.</p>
+
+      <div class="map-actions">
+        <button type="button" id="submitMapBtn">Submit</button>
+      </div>
 
       <div class="map-wrap" id="mapWrap">
         <img class="map-img" src="Morris-Human-Anatomy-Diagram-1933.svg" alt="Body Map" />
@@ -244,6 +267,8 @@
         <div style="margin-top:8px;"><strong>Mapped Value:</strong></div>
         <div id="mappedValue">None</div>
       </div>
+
+      <div class="status-box" id="statusBox">Waiting for test.</div>
     </div>
   </div>
 
@@ -252,8 +277,11 @@
     const openMapBtn = document.getElementById("openMapBtn");
     const closeMapBtn = document.getElementById("closeMapBtn");
     const clearBtn = document.getElementById("clearBtn");
+    const submitMapBtn = document.getElementById("submitMapBtn");
     const selectedList = document.getElementById("selectedList");
     const mappedValue = document.getElementById("mappedValue");
+    const statusBox = document.getElementById("statusBox");
+    const zohoFrame = document.getElementById("zohoForm");
 
     const sameRegionMultipleMap = {
       "Head": "Head - Multiple Head Injury",
@@ -262,6 +290,10 @@
       "Upper Extremities": "Upper Extremities - Multiple",
       "Lower Extremities": "Lower Extremities - Multiple"
     };
+
+    function setStatus(message) {
+      statusBox.textContent = message;
+    }
 
     openMapBtn.addEventListener("click", () => {
       mapPanel.classList.add("open");
@@ -283,6 +315,7 @@
         btn.classList.remove("selected");
       });
       updateSelectedDisplay();
+      setStatus("Selections cleared.");
     });
 
     function getSelectedHotspots() {
@@ -303,7 +336,6 @@
       const regions = getSelectedRegions();
 
       if (hotspots.length === 0) return "";
-
       if (hotspots.length === 1) return values[0];
 
       if (regions.length === 1) {
@@ -320,6 +352,34 @@
       selectedList.textContent = values.length ? values.join(", ") : "None";
       mappedValue.textContent = mapped || "None";
     }
+
+    submitMapBtn.addEventListener("click", () => {
+      const mapped = calculateBodyPartValue();
+
+      if (!mapped) {
+        alert("Please select at least one body part.");
+        return;
+      }
+
+      const payload = {
+        type: "body_part_update",
+        fieldAlias: "body_part",
+        value: mapped
+      };
+
+      try {
+        zohoFrame.contentWindow.postMessage(
+          payload,
+          "https://forms.zohopublic.com"
+        );
+
+        setStatus("Sent test message to Zoho iframe: " + mapped);
+        console.log("Sent to Zoho iframe:", payload);
+      } catch (error) {
+        console.error(error);
+        setStatus("Error sending test message.");
+      }
+    });
 
     updateSelectedDisplay();
   </script>
