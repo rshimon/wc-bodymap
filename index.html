@@ -130,10 +130,10 @@
       min-height: 20px;
     }
 
-    iframe {
+    .form-panel iframe {
       width: 100%;
-      min-height: 1600px;
       border: none;
+      min-height: 1600px;
     }
   </style>
 </head>
@@ -151,12 +151,61 @@
 
   <div class="layout">
     <div class="form-panel">
-      <iframe
-        id="zohoForm"
-        aria-label="Metrix Incident Report Test Duplicate"
-        frameborder="0"
-        src="https://forms.zohopublic.com/metrix3601/form/MetrixIncidentReportTestDuplicate/formperma/-rwK4hrPhavyimHDR7utCO6emCQAdY9Lj7xr88E8530">
-      </iframe>
+      <div id="zf_div_-rwK4hrPhavyimHDR7utCO6emCQAdY9Lj7xr88E8530"></div>
+
+      <script type="text/javascript">
+      (function() {
+        try {
+          var f = document.createElement("iframe");
+          var ifrmSrc = "https://forms.zohopublic.com/metrix3601/form/MetrixIncidentReportTestDuplicate/formperma/-rwK4hrPhavyimHDR7utCO6emCQAdY9Lj7xr88E8530?zf_rszfm=1";
+
+          f.src = ifrmSrc;
+          f.id = "zohoForm";
+          f.style.border = "none";
+          f.style.width = "100%";
+          f.style.height = "1600px";
+          f.style.transition = "all 0.5s ease";
+          f.setAttribute("aria-label", "Metrix Incident Report Test Duplicate");
+
+          var d = document.getElementById("zf_div_-rwK4hrPhavyimHDR7utCO6emCQAdY9Lj7xr88E8530");
+          d.appendChild(f);
+
+          window.addEventListener("message", function(event) {
+            var evntData = event.data;
+            if (evntData && evntData.constructor == String) {
+              var zf_ifrm_data = evntData.split("|");
+              if (zf_ifrm_data.length == 2 || zf_ifrm_data.length == 3) {
+                var zf_perma = zf_ifrm_data[0];
+                var zf_ifrm_ht_nw = (parseInt(zf_ifrm_data[1], 10) + 15) + "px";
+                var iframe = document.getElementById("zf_div_-rwK4hrPhavyimHDR7utCO6emCQAdY9Lj7xr88E8530").getElementsByTagName("iframe")[0];
+
+                if ((iframe.src).indexOf("formperma") > 0 && (iframe.src).indexOf(zf_perma) > 0) {
+                  var prevIframeHeight = iframe.style.height;
+                  var zf_tout = false;
+
+                  if (zf_ifrm_data.length == 3) {
+                    iframe.scrollIntoView();
+                    zf_tout = true;
+                  }
+
+                  if (prevIframeHeight != zf_ifrm_ht_nw) {
+                    if (zf_tout) {
+                      setTimeout(function() {
+                        iframe.style.height = zf_ifrm_ht_nw;
+                      }, 500);
+                    } else {
+                      iframe.style.height = zf_ifrm_ht_nw;
+                    }
+                  }
+                }
+              }
+            }
+          }, false);
+        } catch (e) {
+          console.error(e);
+        }
+      })();
+      </script>
     </div>
 
     <div class="map-panel" id="mapPanel">
@@ -281,7 +330,6 @@
     const selectedList = document.getElementById("selectedList");
     const mappedValue = document.getElementById("mappedValue");
     const statusBox = document.getElementById("statusBox");
-    const zohoFrame = document.getElementById("zohoForm");
 
     const sameRegionMultipleMap = {
       "Head": "Head - Multiple Head Injury",
@@ -290,6 +338,10 @@
       "Upper Extremities": "Upper Extremities - Multiple",
       "Lower Extremities": "Lower Extremities - Multiple"
     };
+
+    function getZohoFrame() {
+      return document.getElementById("zohoForm");
+    }
 
     function setStatus(message) {
       statusBox.textContent = message;
@@ -358,6 +410,13 @@
 
       if (!mapped) {
         alert("Please select at least one body part.");
+        return;
+      }
+
+      const zohoFrame = getZohoFrame();
+
+      if (!zohoFrame || !zohoFrame.contentWindow) {
+        setStatus("Zoho form iframe not found.");
         return;
       }
 
