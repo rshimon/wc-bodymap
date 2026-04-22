@@ -2,90 +2,59 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <title>Metrix Incident Form + JS EDitor</title>
+  <title>Select injured body part</title>
+
+  <!-- PNG capture -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+  <!-- PDF generation -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 0;
       padding: 24px;
-      background: #f7f7f7;
+      background: #fff;
     }
 
-    h1 {
-      margin-top: 0;
-      margin-bottom: 8px;
-      font-size: 24px;
+    h2 {
+      margin-bottom: 6px;
     }
 
-    .subtext {
+    .small {
       color: #555;
-      margin-bottom: 18px;
-      font-size: 14px;
+      font-size: 13px;
+      margin-top: 6px;
     }
 
     .toolbar {
+      max-width: 900px;
+      margin: 12px auto 0;
       display: flex;
       gap: 10px;
-      margin-bottom: 18px;
+      align-items: center;
       flex-wrap: wrap;
     }
 
-    .toolbar button,
-    .map-actions button {
-      padding: 10px 14px;
+    .toolbar button {
+      padding: 8px 12px;
       font-size: 14px;
+      width: auto;
+      text-align: center;
+      display: inline-block;
       cursor: pointer;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      background: white;
-    }
-
-    .layout {
-      display: flex;
-      gap: 20px;
-      align-items: flex-start;
-    }
-
-    .form-panel {
-      flex: 1 1 65%;
-      background: white;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    }
-
-    .map-panel {
-      flex: 1 1 35%;
-      background: white;
-      border-radius: 12px;
-      padding: 16px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-      display: none;
-      position: sticky;
-      top: 20px;
-    }
-
-    .map-panel.open {
-      display: block;
-    }
-
-    .map-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-bottom: 12px;
     }
 
     .map-wrap {
       position: relative;
-      max-width: 500px;
-      margin: 0 auto;
+      max-width: 900px;
+      margin: 18px auto 0;
     }
 
     .map-img {
       width: 100%;
-      display: block;
       height: auto;
+      display: block;
     }
 
     .hotspot {
@@ -110,226 +79,169 @@
       box-shadow: 0 0 0 3px rgba(255, 0, 0, 0.20);
     }
 
-    .selected-box {
-      margin-top: 12px;
-      padding: 10px;
+    .debug .hotspot {
+      background: rgba(255, 0, 0, 0.12);
+      border-color: rgba(255, 0, 0, 0.45);
+    }
+
+    .selection-box {
+      max-width: 900px;
+      margin: 16px auto 0;
+      padding: 12px;
       border: 1px solid #ddd;
       border-radius: 8px;
       background: #fafafa;
       font-size: 14px;
     }
 
-    .status-box {
-      margin-top: 12px;
-      padding: 10px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: #fff;
+    .selection-box strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .status {
+      max-width: 900px;
+      margin: 12px auto 0;
       font-size: 14px;
       color: #333;
       min-height: 20px;
     }
-
-    .form-panel iframe {
-      width: 100%;
-      border: none;
-      min-height: 1600px;
-    }
   </style>
 </head>
 <body>
-  <h1>Metrix Incident Form</h1>
-  <div class="subtext">
-    Fill out the form below. Open the body map when needed without leaving this page.
+  <h2>Select injured body part</h2>
+  <div class="small">
+    Select one or more body regions, then download a PNG/PDF or return to the Zoho form.
   </div>
 
   <div class="toolbar">
-    <button type="button" id="openMapBtn">Open Body Map</button>
-    <button type="button" id="closeMapBtn">Close Body Map</button>
+    <button type="button" id="toggleHotspots">Show hotspots</button>
+    <button type="button" id="downloadPngBtn">Download PNG</button>
+    <button type="button" id="downloadPdfBtn">Download PDF</button>
+    <button type="button" id="returnBtn">Return to Form</button>
     <button type="button" id="clearBtn">Clear Selections</button>
   </div>
 
-  <div class="layout">
-    <div class="form-panel">
-      <div id="zf_div_-rwK4hrPhavyimHDR7utCO6emCQAdY9Lj7xr88E8530"></div>
+  <div class="status" id="statusMsg"></div>
 
-      <script type="text/javascript">
-      (function() {
-        try {
-          var f = document.createElement("iframe");
-          var ifrmSrc = "https://forms.zohopublic.com/metrix3601/form/MetrixIncidentReportTestDuplicate/formperma/-rwK4hrPhavyimHDR7utCO6emCQAdY9Lj7xr88E8530?zf_rszfm=1";
+  <div class="selection-box">
+    <strong>Selected Areas:</strong>
+    <div id="selectedList">None</div>
+    <div class="small" id="mappedResult">Mapped Body Part Value: None</div>
+  </div>
 
-          f.src = ifrmSrc;
-          f.id = "zohoForm";
-          f.style.border = "none";
-          f.style.width = "100%";
-          f.style.height = "1600px";
-          f.style.transition = "all 0.5s ease";
-          f.setAttribute("aria-label", "Metrix Incident Report Test Duplicate");
+  <!-- Capture this whole page content -->
+  <div id="captureRoot">
+    <div class="map-wrap" id="mapWrap">
+      <img class="map-img" src="Morris-Human-Anatomy-Diagram-1933.svg" alt="Body Map" />
 
-          var d = document.getElementById("zf_div_-rwK4hrPhavyimHDR7utCO6emCQAdY9Lj7xr88E8530");
-          d.appendChild(f);
+      <!-- HEAD -->
+      <button class="hotspot"
+              style="left:45%; top:6%; width:10%; height:10%;"
+              data-value="Head - Multiple Head Injury"
+              data-region="Head"
+              aria-label="Head"></button>
 
-          window.addEventListener("message", function(event) {
-            var evntData = event.data;
-            if (evntData && evntData.constructor == String) {
-              var zf_ifrm_data = evntData.split("|");
-              if (zf_ifrm_data.length == 2 || zf_ifrm_data.length == 3) {
-                var zf_perma = zf_ifrm_data[0];
-                var zf_ifrm_ht_nw = (parseInt(zf_ifrm_data[1], 10) + 15) + "px";
-                var iframe = document.getElementById("zf_div_-rwK4hrPhavyimHDR7utCO6emCQAdY9Lj7xr88E8530").getElementsByTagName("iframe")[0];
+      <!-- NECK -->
+      <button class="hotspot"
+              style="left:40%; top:18%; width:20%; height:9%;"
+              data-value="Neck - Soft Tissue"
+              data-region="Neck"
+              aria-label="Neck"></button>
 
-                if ((iframe.src).indexOf("formperma") > 0 && (iframe.src).indexOf(zf_perma) > 0) {
-                  var prevIframeHeight = iframe.style.height;
-                  var zf_tout = false;
+      <!-- TRUNK -->
+      <button class="hotspot"
+              style="left:35%; top:28%; width:30%; height:14%;"
+              data-value="Trunk - Chest"
+              data-region="Trunk"
+              aria-label="Chest"></button>
 
-                  if (zf_ifrm_data.length == 3) {
-                    iframe.scrollIntoView();
-                    zf_tout = true;
-                  }
+      <button class="hotspot"
+              style="left:35%; top:42%; width:30%; height:18%;"
+              data-value="Trunk - Abdomen Including Groin"
+              data-region="Trunk"
+              aria-label="Abdomen/Groin"></button>
 
-                  if (prevIframeHeight != zf_ifrm_ht_nw) {
-                    if (zf_tout) {
-                      setTimeout(function() {
-                        iframe.style.height = zf_ifrm_ht_nw;
-                      }, 500);
-                    } else {
-                      iframe.style.height = zf_ifrm_ht_nw;
-                    }
-                  }
-                }
-              }
-            }
-          }, false);
-        } catch (e) {
-          console.error(e);
-        }
-      })();
-      </script>
-    </div>
+      <button class="hotspot"
+              style="left:35%; top:60%; width:30%; height:10%;"
+              data-value="Trunk - Lower Back Area"
+              data-region="Trunk"
+              aria-label="Lower Back"></button>
 
-    <div class="map-panel" id="mapPanel">
-      <h2>Body Map</h2>
-      <p>Select one or more areas.</p>
+      <!-- UPPER EXTREMITIES -->
+      <button class="hotspot"
+              style="left:18%; top:28%; width:16%; height:22%;"
+              data-value="Upper Extremities - Upper Arm"
+              data-region="Upper Extremities"
+              aria-label="Left Upper Arm"></button>
 
-      <div class="map-actions">
-        <button type="button" id="submitMapBtn">Submit</button>
-      </div>
+      <button class="hotspot"
+              style="left:66%; top:28%; width:16%; height:22%;"
+              data-value="Upper Extremities - Upper Arm"
+              data-region="Upper Extremities"
+              aria-label="Right Upper Arm"></button>
 
-      <div class="map-wrap" id="mapWrap">
-        <img class="map-img" src="Morris-Human-Anatomy-Diagram-1933.svg" alt="Body Map" />
+      <button class="hotspot"
+              style="left:18%; top:50%; width:16%; height:14%;"
+              data-value="Upper Extremities - Hand"
+              data-region="Upper Extremities"
+              aria-label="Left Hand"></button>
 
-        <button class="hotspot"
-                style="left:45%; top:6%; width:10%; height:10%;"
-                data-value="Head - Multiple Head Injury"
-                data-region="Head"
-                aria-label="Head"></button>
+      <button class="hotspot"
+              style="left:66%; top:50%; width:16%; height:14%;"
+              data-value="Upper Extremities - Hand"
+              data-region="Upper Extremities"
+              aria-label="Right Hand"></button>
 
-        <button class="hotspot"
-                style="left:40%; top:18%; width:20%; height:9%;"
-                data-value="Neck - Soft Tissue"
-                data-region="Neck"
-                aria-label="Neck"></button>
+      <!-- LOWER EXTREMITIES -->
+      <button class="hotspot"
+              style="left:38%; top:70%; width:11%; height:16%;"
+              data-value="Lower Extremities - Upper Leg"
+              data-region="Lower Extremities"
+              aria-label="Left Upper Leg"></button>
 
-        <button class="hotspot"
-                style="left:35%; top:28%; width:30%; height:14%;"
-                data-value="Trunk - Chest"
-                data-region="Trunk"
-                aria-label="Chest"></button>
+      <button class="hotspot"
+              style="left:51%; top:70%; width:11%; height:16%;"
+              data-value="Lower Extremities - Upper Leg"
+              data-region="Lower Extremities"
+              aria-label="Right Upper Leg"></button>
 
-        <button class="hotspot"
-                style="left:35%; top:42%; width:30%; height:18%;"
-                data-value="Trunk - Abdomen Including Groin"
-                data-region="Trunk"
-                aria-label="Abdomen/Groin"></button>
+      <button class="hotspot"
+              style="left:38%; top:84%; width:11%; height:7%;"
+              data-value="Lower Extremities - Knee"
+              data-region="Lower Extremities"
+              aria-label="Left Knee"></button>
 
-        <button class="hotspot"
-                style="left:35%; top:60%; width:30%; height:10%;"
-                data-value="Trunk - Lower Back Area"
-                data-region="Trunk"
-                aria-label="Lower Back"></button>
+      <button class="hotspot"
+              style="left:51%; top:84%; width:11%; height:7%;"
+              data-value="Lower Extremities - Knee"
+              data-region="Lower Extremities"
+              aria-label="Right Knee"></button>
 
-        <button class="hotspot"
-                style="left:18%; top:28%; width:16%; height:22%;"
-                data-value="Upper Extremities - Upper Arm"
-                data-region="Upper Extremities"
-                aria-label="Left Upper Arm"></button>
+      <button class="hotspot"
+              style="left:38%; top:91%; width:11%; height:7%;"
+              data-value="Lower Extremities - Foot"
+              data-region="Lower Extremities"
+              aria-label="Left Foot"></button>
 
-        <button class="hotspot"
-                style="left:66%; top:28%; width:16%; height:22%;"
-                data-value="Upper Extremities - Upper Arm"
-                data-region="Upper Extremities"
-                aria-label="Right Upper Arm"></button>
-
-        <button class="hotspot"
-                style="left:18%; top:50%; width:16%; height:14%;"
-                data-value="Upper Extremities - Hand"
-                data-region="Upper Extremities"
-                aria-label="Left Hand"></button>
-
-        <button class="hotspot"
-                style="left:66%; top:50%; width:16%; height:14%;"
-                data-value="Upper Extremities - Hand"
-                data-region="Upper Extremities"
-                aria-label="Right Hand"></button>
-
-        <button class="hotspot"
-                style="left:38%; top:70%; width:11%; height:16%;"
-                data-value="Lower Extremities - Upper Leg"
-                data-region="Lower Extremities"
-                aria-label="Left Upper Leg"></button>
-
-        <button class="hotspot"
-                style="left:51%; top:70%; width:11%; height:16%;"
-                data-value="Lower Extremities - Upper Leg"
-                data-region="Lower Extremities"
-                aria-label="Right Upper Leg"></button>
-
-        <button class="hotspot"
-                style="left:38%; top:84%; width:11%; height:7%;"
-                data-value="Lower Extremities - Knee"
-                data-region="Lower Extremities"
-                aria-label="Left Knee"></button>
-
-        <button class="hotspot"
-                style="left:51%; top:84%; width:11%; height:7%;"
-                data-value="Lower Extremities - Knee"
-                data-region="Lower Extremities"
-                aria-label="Right Knee"></button>
-
-        <button class="hotspot"
-                style="left:38%; top:91%; width:11%; height:7%;"
-                data-value="Lower Extremities - Foot"
-                data-region="Lower Extremities"
-                aria-label="Left Foot"></button>
-
-        <button class="hotspot"
-                style="left:51%; top:91%; width:11%; height:7%;"
-                data-value="Lower Extremities - Foot"
-                data-region="Lower Extremities"
-                aria-label="Right Foot"></button>
-      </div>
-
-      <div class="selected-box">
-        <div><strong>Selected Areas:</strong></div>
-        <div id="selectedList">None</div>
-        <div style="margin-top:8px;"><strong>Mapped Value:</strong></div>
-        <div id="mappedValue">None</div>
-      </div>
-
-      <div class="status-box" id="statusBox">Waiting for test.</div>
+      <button class="hotspot"
+              style="left:51%; top:91%; width:11%; height:7%;"
+              data-value="Lower Extremities - Foot"
+              data-region="Lower Extremities"
+              aria-label="Right Foot"></button>
     </div>
   </div>
 
   <script>
-    const mapPanel = document.getElementById("mapPanel");
-    const openMapBtn = document.getElementById("openMapBtn");
-    const closeMapBtn = document.getElementById("closeMapBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const submitMapBtn = document.getElementById("submitMapBtn");
+    const mapWrap = document.getElementById("mapWrap");
+    const toggleBtn = document.getElementById("toggleHotspots");
     const selectedList = document.getElementById("selectedList");
-    const mappedValue = document.getElementById("mappedValue");
-    const statusBox = document.getElementById("statusBox");
+    const mappedResult = document.getElementById("mappedResult");
+    const statusMsg = document.getElementById("statusMsg");
+    const clearBtn = document.getElementById("clearBtn");
+    const returnBtn = document.getElementById("returnBtn");
+    const downloadPngBtn = document.getElementById("downloadPngBtn");
+    const downloadPdfBtn = document.getElementById("downloadPdfBtn");
 
     const sameRegionMultipleMap = {
       "Head": "Head - Multiple Head Injury",
@@ -339,20 +251,15 @@
       "Lower Extremities": "Lower Extremities - Multiple"
     };
 
-    function getZohoFrame() {
-      return document.getElementById("zohoForm");
+    function setStatus(msg) {
+      statusMsg.textContent = msg;
     }
 
-    function setStatus(message) {
-      statusBox.textContent = message;
-    }
-
-    openMapBtn.addEventListener("click", () => {
-      mapPanel.classList.add("open");
-    });
-
-    closeMapBtn.addEventListener("click", () => {
-      mapPanel.classList.remove("open");
+    toggleBtn.addEventListener("click", () => {
+      mapWrap.classList.toggle("debug");
+      toggleBtn.textContent = mapWrap.classList.contains("debug")
+        ? "Hide hotspots"
+        : "Show hotspots";
     });
 
     document.querySelectorAll(".hotspot").forEach(btn => {
@@ -383,15 +290,21 @@
     }
 
     function calculateBodyPartValue() {
-      const hotspots = getSelectedHotspots();
-      const values = getSelectedValues();
-      const regions = getSelectedRegions();
+      const selectedHotspots = getSelectedHotspots();
+      const selectedValues = getSelectedValues();
+      const selectedRegions = getSelectedRegions();
 
-      if (hotspots.length === 0) return "";
-      if (hotspots.length === 1) return values[0];
+      if (selectedHotspots.length === 0) {
+        return "";
+      }
 
-      if (regions.length === 1) {
-        return sameRegionMultipleMap[regions[0]] || values[0];
+      if (selectedHotspots.length === 1) {
+        return selectedValues[0];
+      }
+
+      if (selectedRegions.length === 1) {
+        const region = selectedRegions[0];
+        return sameRegionMultipleMap[region] || selectedValues[0];
       }
 
       return "Multi Body Parts - Multi Systems";
@@ -399,45 +312,101 @@
 
     function updateSelectedDisplay() {
       const values = getSelectedValues();
-      const mapped = calculateBodyPartValue();
+      const mappedValue = calculateBodyPartValue();
 
       selectedList.textContent = values.length ? values.join(", ") : "None";
-      mappedValue.textContent = mapped || "None";
+      mappedResult.textContent = "Mapped Body Part Value: " + (mappedValue || "None");
     }
 
-    submitMapBtn.addEventListener("click", () => {
-      const mapped = calculateBodyPartValue();
+    async function captureCanvas() {
+      setStatus("Generating image...");
+      const canvas = await html2canvas(document.body, {
+        backgroundColor: "#ffffff",
+        useCORS: true,
+        scale: 2
+      });
+      return canvas;
+    }
 
-      if (!mapped) {
-        alert("Please select at least one body part.");
-        return;
-      }
+    async function downloadPng() {
+      const canvas = await captureCanvas();
+      const link = document.createElement("a");
+      link.download = `body-map-${Date.now()}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+      setStatus("PNG downloaded.");
+    }
 
-      const zohoFrame = getZohoFrame();
+    async function downloadPdf() {
+      const canvas = await captureCanvas();
+      const imgData = canvas.toDataURL("image/png");
 
-      if (!zohoFrame || !zohoFrame.contentWindow) {
-        setStatus("Zoho form iframe not found.");
-        return;
-      }
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: "portrait",
+        unit: "pt",
+        format: "a4"
+      });
 
-      const payload = {
-        type: "body_part_update",
-        fieldAlias: "body_part",
-        value: mapped
-      };
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
 
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pageWidth / imgWidth, pageHeight / imgHeight);
+
+      const renderWidth = imgWidth * ratio;
+      const renderHeight = imgHeight * ratio;
+
+      const x = (pageWidth - renderWidth) / 2;
+      const y = 20;
+
+      pdf.addImage(imgData, "PNG", x, y, renderWidth, renderHeight);
+      pdf.save(`body-map-${Date.now()}.pdf`);
+
+      setStatus("PDF downloaded.");
+    }
+
+    downloadPngBtn.addEventListener("click", async () => {
       try {
-        zohoFrame.contentWindow.postMessage(
-          payload,
-          "https://forms.zohopublic.com"
-        );
-
-        setStatus("Sent test message to Zoho iframe: " + mapped);
-        console.log("Sent to Zoho iframe:", payload);
-      } catch (error) {
-        console.error(error);
-        setStatus("Error sending test message.");
+        await downloadPng();
+      } catch (err) {
+        console.error(err);
+        setStatus("Could not generate PNG.");
+        alert("Could not generate PNG.");
       }
+    });
+
+    downloadPdfBtn.addEventListener("click", async () => {
+      try {
+        await downloadPdf();
+      } catch (err) {
+        console.error(err);
+        setStatus("Could not generate PDF.");
+        alert("Could not generate PDF.");
+      }
+    });
+
+    returnBtn.addEventListener("click", () => {
+      const mappedValue = calculateBodyPartValue();
+
+      if (!mappedValue) {
+        alert("Please select at least one body part before returning to the form.");
+        return;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const returnUrl = params.get("returnUrl");
+
+      if (!returnUrl) {
+        alert("Missing returnUrl in the URL. Example: ?returnUrl=<your_zoho_form_url_encoded>");
+        return;
+      }
+
+      const sep = returnUrl.includes("?") ? "&" : "?";
+      const finalUrl = returnUrl + sep + "body_part=" + encodeURIComponent(mappedValue);
+
+      window.location.href = finalUrl;
     });
 
     updateSelectedDisplay();
